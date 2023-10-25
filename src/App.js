@@ -1,25 +1,75 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import Table from "./components/Table";
+import { Route, Routes } from "react-router-dom";
+import Header from "./components/Header";
+import AddContact from "./components/AddContact";
+import "./App.css";
+import axios from "axios";
+import EditContact from "./components/EditContact";
 
-function App() {
+const App = () => {
+  const API = "http://localhost:8000/contacts";
+  const [contacts, setContacts] = useState([]);
+  const [oneContact, setOneContact] = useState(null);
+
+  // ! CREATE (post request)
+  const addContact = (newContact) => {
+    axios.post(API, newContact);
+  };
+
+  // !READ (get request)
+  const getContacts = async () => {
+    const result = await axios.get(API);
+    setContacts(result.data);
+  };
+
+  // ! DELETE
+
+  async function handleDelete(id) {
+    await axios.delete(`${API}/${id}`);
+    getContacts();
+  }
+
+  // !EDIT
+
+  async function getOneContact(id) {
+    const result = await axios(`${API}/${id}`);
+    setOneContact(result.data);
+  }
+
+  async function saveContact(id, editedContact) {
+    await axios.patch(`${API}/${id}`, editedContact);
+    getContacts();
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Header />
+      <Routes>
+        <Route path="/add" element={<AddContact addContact={addContact} />} />
+        <Route
+          path="/table"
+          element={
+            <Table
+              contacts={contacts}
+              handleDelete={handleDelete}
+              getContacts={getContacts}
+            />
+          }
+        />
+        <Route
+          path="/edit/:id"
+          element={
+            <EditContact
+              getOneContact={getOneContact}
+              saveContact={saveContact}
+              oneContact={oneContact}
+            />
+          }
+        />
+      </Routes>
     </div>
   );
-}
+};
 
 export default App;
